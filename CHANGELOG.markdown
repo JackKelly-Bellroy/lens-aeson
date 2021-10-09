@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+1.1.2 [2021.10.09]
+------------------
 * Allow building with `aeson-2.0.0.0`.
 * Add `Index`, `IxValue`, `Ixed`, `At`, and `Each` instances for `KeyMap` if
   building with `aeson-2.0.0.0` or later.
