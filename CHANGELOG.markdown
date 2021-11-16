@@ -1,3 +1,7 @@
+1.1.3 [2021.11.16]
+------------------
+* Drop support for pre-8.0 versions of GHC.
+
 1.1.2 [2021.10.09]
 ------------------
 * Allow building with `aeson-2.0.0.0`.
