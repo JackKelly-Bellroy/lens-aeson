@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Require `aeson-2.0.*` and `lens-5.0.*` or greater.
+
 1.1.3 [2021.11.16]
 ------------------
 * Drop support for pre-8.0 versions of GHC.

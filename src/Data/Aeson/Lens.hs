@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -53,6 +52,8 @@ module Data.Aeson.Lens
 import Control.Applicative
 import Control.Lens
 import Data.Aeson
+import qualified Data.Aeson.Key    as Key
+import qualified Data.Aeson.KeyMap as KM
 import Data.Aeson.Parser (value)
 import Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import Data.Scientific (Scientific)
@@ -68,11 +69,6 @@ import qualified Data.Text.Encoding as StrictText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import Data.Vector (Vector)
 import Prelude hiding (null)
-
-#if MIN_VERSION_aeson(2,0,0)
-import qualified Data.Aeson.Key    as Key
-import qualified Data.Aeson.KeyMap as KM
-#endif
 
 -- $setup
 -- >>> import Control.Lens
@@ -297,15 +293,8 @@ class AsPrimitive t => AsValue t where
   -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
   -- "{\"key\":\"value\"}"
   _Object :: Prism' t (HashMap Text Value)
-  _Object = _Value.prism (Object . fwd) (\v -> case v of Object o -> Right (bwd o); _ -> Left v)
-    where
-#if MIN_VERSION_aeson(2,0,0)
-      fwd = KM.fromHashMapText
-      bwd = KM.toHashMapText
-#else
-      fwd = id
-      bwd = id
-#endif
+  _Object = _Value.prism (Object . KM.fromHashMapText)
+                         (\v -> case v of Object o -> Right (KM.toHashMapText o); _ -> Left v)
   {-# INLINE _Object #-}
 
   -- |
@@ -481,14 +470,7 @@ type instance Index Value = Text
 
 type instance IxValue Value = Value
 instance Ixed Value where
-  ix i f (Object o) = Object <$> ix (toKey i) f o
-    where
-#if MIN_VERSION_aeson(2,0,0)
-      toKey :: Text -> Key.Key
-      toKey = Key.fromText
-#else
-      toKey = id
-#endif
+  ix i f (Object o) = Object <$> ix (Key.fromText i) f o
   ix _ _ v          = pure v
   {-# INLINE ix #-}
 
@@ -498,7 +480,6 @@ instance Plated Value where
   plate _ xs = pure xs
   {-# INLINE plate #-}
 
-#if MIN_VERSION_aeson(2,0,0)
 type instance Index (KM.KeyMap v) = Key.Key
 type instance IxValue (KM.KeyMap v) = v
 
@@ -511,7 +492,6 @@ instance At (KM.KeyMap v) where
 instance Each (KM.KeyMap a) (KM.KeyMap b) a b where
   each = traversed
   {-# INLINE each #-}
-#endif
 
 ------------------------------------------------------------------------------
 -- Pattern Synonyms
