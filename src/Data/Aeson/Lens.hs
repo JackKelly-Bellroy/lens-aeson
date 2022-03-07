@@ -54,6 +54,7 @@ import Control.Lens
 import Data.Aeson
 import qualified Data.Aeson.Key    as Key
 import qualified Data.Aeson.KeyMap as KM
+import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.Parser (value)
 import Data.Attoparsec.ByteString.Lazy (maybeResult, parse)
 import Data.Scientific (Scientific)
@@ -61,7 +62,6 @@ import qualified Data.Scientific as Scientific
 import qualified Data.ByteString as Strict
 import Data.ByteString.Lazy.Char8 as Lazy hiding (putStrLn)
 import Data.Data
-import Data.HashMap.Strict (HashMap)
 import Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
 import Data.Text.Lens (packed)
@@ -191,7 +191,7 @@ class AsNumber t => AsPrimitive t where
   -- >>> "{\"a\": \"xyz\", \"b\": true}" ^? key "b" . _String
   -- Nothing
   --
-  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
+  -- >>> _Object._Wrapped # [("key" :: Key, _String # "value")] :: String
   -- "{\"key\":\"value\"}"
   _String :: Prism' t Text
   _String = _Primitive.prism StringPrim (\v -> case v of StringPrim s -> Right s; _ -> Left v)
@@ -290,11 +290,10 @@ class AsPrimitive t => AsValue t where
   -- >>> "{\"a\": {}, \"b\": null}" ^? key "b" . _Object
   -- Nothing
   --
-  -- >>> _Object._Wrapped # [("key" :: Text, _String # "value")] :: String
+  -- >>> _Object._Wrapped # [("key" :: Key, _String # "value")] :: String
   -- "{\"key\":\"value\"}"
-  _Object :: Prism' t (HashMap Text Value)
-  _Object = _Value.prism (Object . KM.fromHashMapText)
-                         (\v -> case v of Object o -> Right (KM.toHashMapText o); _ -> Left v)
+  _Object :: Prism' t (KeyMap Value)
+  _Object = _Value.prism Object (\v -> case v of Object o -> Right o; _ -> Left v)
   {-# INLINE _Object #-}
 
   -- |
@@ -329,7 +328,7 @@ instance AsValue LazyText.Text where
   {-# INLINE _Value #-}
 
 -- |
--- Like 'ix', but for 'Object' with Text indices. This often has better
+-- Like 'ix', but for 'Object' with 'Key' indices. This often has better
 -- inference than 'ix' when used with OverloadedStrings.
 --
 -- >>> "{\"a\": 100, \"b\": 200}" ^? key "a"
@@ -337,7 +336,7 @@ instance AsValue LazyText.Text where
 --
 -- >>> "[1,2,3]" ^? key "a"
 -- Nothing
-key :: AsValue t => Text -> Traversal' t Value
+key :: AsValue t => Key -> Traversal' t Value
 key i = _Object . ix i
 {-# INLINE key #-}
 
@@ -348,7 +347,7 @@ key i = _Object . ix i
 --
 -- >>> "{\"a\": 4}" & members . _Number *~ 10
 -- "{\"a\":40}"
-members :: AsValue t => IndexedTraversal' Text t Value
+members :: AsValue t => IndexedTraversal' Key t Value
 members = _Object . itraversed
 {-# INLINE members #-}
 
@@ -492,6 +491,14 @@ instance At (KM.KeyMap v) where
 instance Each (KM.KeyMap a) (KM.KeyMap b) a b where
   each = traversed
   {-# INLINE each #-}
+
+-- | Use @'iso' 'KM.toList' 'KM.fromList'@.
+-- Unwrapping returns some permutation of the list.
+instance (t ~ KeyMap v') => Rewrapped (KeyMap v) t
+instance Wrapped (KeyMap v) where
+  type Unwrapped (KeyMap v) = [(Key, v)]
+  _Wrapped' = iso KM.toList KM.fromList
+  {-# INLINE _Wrapped' #-}
 
 ------------------------------------------------------------------------------
 -- Pattern Synonyms
