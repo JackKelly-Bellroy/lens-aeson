@@ -4,8 +4,8 @@
 * Change the types of `_Object`, `key`, and `members`:
 
   ```diff
-  _Object :: Prism' t (HashMap Text Value)
-  _Object :: Prism' t (KeyMap Value)
+  -_Object :: Prism' t (HashMap Text Value)
+  +_Object :: Prism' t (KeyMap Value)
 
   -key :: AsValue t => Text -> Traversal' t Value
   +key :: AsValue t => Key  -> Traversal' t Value
