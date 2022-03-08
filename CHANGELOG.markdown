@@ -1,3 +1,25 @@
+1.2 [????.??.??]
+----------------
+* Require `aeson-2.0.*` and `lens-5.0.*` or greater.
+* Change the types of `_Object`, `key`, and `members`:
+
+  ```diff
+  _Object :: Prism' t (HashMap Text Value)
+  _Object :: Prism' t (KeyMap Value)
+
+  -key :: AsValue t => Text -> Traversal' t Value
+  +key :: AsValue t => Key  -> Traversal' t Value
+
+  -members :: AsValue t => IndexedTraversal' Text t Value
+  +members :: AsValue t => IndexedTraversal' Key  t Value
+  ```
+
+  This mirrors similar changes made in `aeson-2.0.*`, where the type of
+  `Object`'s field was changed from `HashMap Text Value` to `KeyMap Value`.
+* Add `Wrapped` and `Rewrapped` instances for `KeyMap`. These treat `KeyMap v`
+  as a wrapper around `[(Key, v)]`. The order in which the key-value pairs
+  appear in this list is not stable.
+
 1.1.3 [2021.11.16]
 ------------------
 * Drop support for pre-8.0 versions of GHC.
