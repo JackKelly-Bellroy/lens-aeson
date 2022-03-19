@@ -1,4 +1,4 @@
-1.2 [????.??.??]
+1.2 [2022.03.19]
 ----------------
 * Require `aeson-2.0.2.*` and `lens-5.0.*` or greater.
 * Change the types of `_Object`, `key`, and `members`:
