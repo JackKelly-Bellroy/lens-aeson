@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+1.2.1 [2022.05.07]
+------------------
 * Change the `IsKey` instances for `ByteString`s to use
   `decodeUtf8With lenientDecode` instead of `decodeUtf8`. While these `IsKey`
   instances are meant to used for interoperability with `aeson` values that
